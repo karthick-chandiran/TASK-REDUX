@@ -2,8 +2,24 @@ import styled from "styled-components";
 import { useState } from "react";
 import { makeStyles } from "@material-ui/core/styles";
 import Button from "@material-ui/core/Button";
-import { useDispatch } from "react-redux";
-import { addNewTaskData } from "../redux/actionCreators";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  addNewTaskData,
+  openTaskDrawerAction,
+  removeTask,
+  updateTaskData
+} from "../redux/actionCreators";
+import DeleteIcon from "../icons/DeleteIcon";
+import { Form, FormControl, InputGroup } from "react-bootstrap";
+import InputIcon from "../icons/InputIcon";
+import {
+  getFormattedDate,
+  getTaskTimeInSeconds,
+  getTimeZoneOffsetInSeconds,
+  secondsToTime,
+  getTimeDropdownValues
+} from "../util";
+import TimeDropDown from "./TimeDropDown";
 
 const useStyles = makeStyles({
   saveButton: {
@@ -12,16 +28,11 @@ const useStyles = makeStyles({
     borderRadius: "3px"
   },
   cancelButton: {
-    background: "none"
-  },
-  buttonsContainer: {
-    direction: "rtl"
+    background: "none",
+    marginLeft: "auto"
   }
 });
 
-const Label = styled.label`
-  display: block;
-`;
 const VerticalContainer = styled.div`
   display: flex;
 `;
@@ -32,27 +43,14 @@ const FieldsContaienr = styled.div`
   background-color: rgb(237, 247, 252);
   padding: 10px 10px 15px;
 `;
-const getTimeZoneOffsetInSeconds = () => {
-  return new Date().getTimezoneOffset() * 60;
-};
-const getTaskTimeInSeconds = (time) => {
-  const [hour, min] = time.split(":");
-  return (parseInt(hour) * 60 + min) * 60;
-};
-
-const getFormattedDate = (date) => {
-  const taskDate = new Date(date);
-  let month = taskDate.getMonth();
-  month = month < 10 ? "0" + month : month;
-  let day = taskDate.getDate();
-  day = day < 10 ? "0" + day : day;
-  return `${taskDate.getFullYear()}-${month}-${day}`;
-};
+const ButtonsContainer = styled.div`
+  display: flex;
+  align-items: center;
+`;
 
 function TaskFields(props) {
-  const [formData, updateFormData] = useState({
-    assignedUser: props.users[0].user_id
-  });
+  const [formData, updateFormData] = useState(props.defaultFormData);
+
   const [isFormValid, updateIsFormValid] = useState(false);
   const dispatch = useDispatch();
   const classes = useStyles();
@@ -70,10 +68,14 @@ function TaskFields(props) {
       newFormData.assignedUser
     );
   };
+  const closeDrawer = () => {
+    dispatch(openTaskDrawerAction(false));
+  };
   const onSubmit = async (e) => {
     e.preventDefault();
     const formattedDate = getFormattedDate(formData.taskDate);
-    const taskTime = getTaskTimeInSeconds(formData.taskTime);
+    // const taskTime = getTaskTimeInSeconds(formData.taskTime);
+    const taskTime = parseInt(formData.taskTime);
     const timeZone = getTimeZoneOffsetInSeconds();
 
     const payload = {
@@ -84,38 +86,82 @@ function TaskFields(props) {
       time_zone: timeZone,
       task_msg: formData.description
     };
-    dispatch(addNewTaskData(payload));
-    props.onCancelClick();
+    if (props.editMode) {
+      dispatch(updateTaskData(payload, formData.taskId));
+    } else {
+      dispatch(addNewTaskData(payload));
+    }
+    closeDrawer();
+  };
+  const onDeleteClick = () => {
+    dispatch(removeTask(formData.taskId));
+    closeDrawer();
   };
 
   return (
     <FieldsContaienr>
-      <form onSubmit={onSubmit}>
+      <form onSubmit={onSubmit} autoComplete="off">
         <InputField>
-          <Label> Task Description </Label>
-          <input type="text" name="description" onChange={onValueChange} />
+          <label htmlFor="desc">Task Description</label>
+          <InputGroup size="sm" className="mb-3">
+            <FormControl
+              id="desc"
+              type="text"
+              name="description"
+              value={formData.description}
+              onChange={onValueChange}
+            />
+            <InputGroup.Append>
+              <InputGroup.Text>
+                <InputIcon />
+              </InputGroup.Text>
+            </InputGroup.Append>
+          </InputGroup>
         </InputField>
         <VerticalContainer>
           <InputField>
-            <Label> Date </Label>
-            <input type="date" name="taskDate" onChange={onValueChange} />
+            <label htmlFor="date">Date</label>
+            <InputGroup size="sm" className="mb-3">
+              <FormControl
+                id="date"
+                type="date"
+                value={formData.taskDate}
+                name="taskDate"
+                onChange={onValueChange}
+              />
+            </InputGroup>
           </InputField>
           <InputField>
-            <Label> Time </Label>
-            <input type="time" name="taskTime" onChange={onValueChange} />
+            <TimeDropDown
+              value={formData.taskTime}
+              onValueChange={onValueChange}
+              timeDropDownValues={props.timeDropDownValues}
+            />
           </InputField>
         </VerticalContainer>
         <InputField>
-          <Label> Assign User </Label>
-          <select name="assignedUser" onChange={onValueChange}>
+          <label htmlFor="user">Assign User</label>
+          <Form.Control
+            id="user"
+            name="assignedUser"
+            value={formData.assignedUser}
+            onChange={onValueChange}
+            as="select"
+            custom
+            size="sm"
+          >
             {props.users.map((user) => (
               <option key={user.id} value={user.user_id}>
                 {user.name}
               </option>
             ))}
-          </select>
+          </Form.Control>
         </InputField>
-        <div className={classes.buttonsContainer}>
+        <ButtonsContainer>
+          {props.editMode && <DeleteIcon onClick={onDeleteClick} />}
+          <Button className={classes.cancelButton} onClick={closeDrawer}>
+            Cancel
+          </Button>
           <Button
             disabled={!isFormValid}
             type="submit"
@@ -124,13 +170,7 @@ function TaskFields(props) {
           >
             Save
           </Button>
-          <Button
-            className={classes.cancelButton}
-            onClick={props.onCancelClick}
-          >
-            Cancel
-          </Button>
-        </div>
+        </ButtonsContainer>
       </form>
     </FieldsContaienr>
   );
@@ -138,6 +178,12 @@ function TaskFields(props) {
 
 export default function TaskFieldsContainer(props) {
   const { fetchStatus, data } = props;
+  const { editData } = useSelector((state) => {
+    return state;
+  });
+  let defaultFormData = {};
+  let editMode = false;
+
   if (fetchStatus === "not_started" || fetchStatus === "inprogress") {
     return <div>Data Loading...</div>;
   } else if (fetchStatus === "error") {
@@ -145,5 +191,31 @@ export default function TaskFieldsContainer(props) {
   } else if (data.length === []) {
     return <div>No users to assign the task ... </div>;
   }
-  return <TaskFields {...props} users={data} />;
+  if (Object.keys(editData).length > 0) {
+    defaultFormData = {
+      assignedUser: editData.assigned_user,
+      description: editData.task_msg,
+      taskDate: editData.task_date,
+      taskTime: editData.task_time,
+      taskId: editData.id
+    };
+    editMode = true;
+  } else {
+    defaultFormData = {
+      assignedUser: props.data[0].user_id,
+      description: "",
+      taskDate: "",
+      taskTime: ""
+    };
+  }
+  const timeDropDownValues = getTimeDropdownValues();
+  return (
+    <TaskFields
+      {...props}
+      timeDropDownValues={timeDropDownValues}
+      editMode={editMode}
+      users={data}
+      defaultFormData={defaultFormData}
+    />
+  );
 }

@@ -8,3 +8,8 @@ export const FETCH_ALLTASK_ERROR = "FETCH_ALLTASK_ERROR";
 
 export const ADD_NEW_TASK = "ADD_NEW_TASK";
 export const ERROR = "ERROR";
+export const EDIT_TASK = "EDIT_TASK";
+export const UPDATE_EDITED_TASK = "UPDATE_EDITED_TASK";
+export const REMOVE_TASK = "REMOVE_TASK";
+export const CLOSE_EDIT = "CLOSE_EDIT";
+export const OPEN_TASK_DRAWER = "OPEN_TASK_DRAWER";

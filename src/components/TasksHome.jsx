@@ -2,7 +2,11 @@ import styled from "styled-components";
 import TaskFields from "./TaskFields";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllTasksAction, fetchUsersAction } from "../redux/actionCreators";
+import {
+  fetchAllTasksAction,
+  fetchUsersAction,
+  openTaskDrawerAction
+} from "../redux/actionCreators";
 import Tasks from "./Tasks";
 import AlertBox from "./AlertBox";
 
@@ -11,7 +15,7 @@ const AddButton = styled.div`
   border-left: 1px solid var(--border-color);
   font-size: 20px;
   font-weight: 500;
-  padding: 5px 10px;
+  padding: 7px 13px;
   &:hover {
     cursor: pointer;
   }
@@ -23,7 +27,7 @@ const Header = styled.header`
   border-bottom: 1px solid var(--border-color);
 `;
 const Title = styled.div`
-  margin: auto 0px auto 5px;
+  margin: auto 0px auto 10px;
 `;
 const Count = styled.span`
   margin-left: 5px;
@@ -36,39 +40,34 @@ const TaskHomeContainer = styled.main`
 `;
 
 export default function TasksHome() {
-  const [openTask, updateOpenTask] = useState(false);
   const dispatch = useDispatch();
 
-  const onAddClick = () => {
-    updateOpenTask(!openTask);
-  };
-  const closeOpenTask = () => {
-    updateOpenTask(false);
-  };
   useEffect(() => {
     dispatch(fetchUsersAction());
     dispatch(fetchAllTasksAction());
   }, [dispatch]);
-  const { fetchStatus, data } = useSelector((state) => {
-    return state.users;
+  const { users, openTaskDrawer, tasks } = useSelector((state) => {
+    return state;
   });
+  const onAddClick = () => {
+    dispatch(openTaskDrawerAction(!openTaskDrawer));
+  };
+  const { fetchStatus, data } = users;
+  const taskCount = tasks.data?.length || 0;
+
   return (
     <TaskHomeContainer>
       <AlertBox />
       <Header>
         <Title>
-          TASKS <Count> {"0"} </Count>
+          TASKS <Count> {taskCount} </Count>
         </Title>
-        <AddButton onClick={onAddClick}> {openTask ? "x" : "+"} </AddButton>
+        <AddButton onClick={onAddClick}>
+          {openTaskDrawer ? "x" : "+"}{" "}
+        </AddButton>
       </Header>
-      {openTask && (
-        <TaskFields
-          fetchStatus={fetchStatus}
-          data={data}
-          onCancelClick={closeOpenTask}
-        />
-      )}
-      {!openTask && <Tasks />}
+      {openTaskDrawer && <TaskFields fetchStatus={fetchStatus} data={data} />}
+      {!openTaskDrawer && <Tasks />}
     </TaskHomeContainer>
   );
 }

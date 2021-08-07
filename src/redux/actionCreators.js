@@ -1,4 +1,10 @@
-import { createTask, getAllTasks, getAllUsers } from "../api/api";
+import {
+  createTask,
+  deleteTask,
+  getAllTasks,
+  getAllUsers,
+  updateTask
+} from "../api/api";
 import {
   ADD_NEW_TASK,
   FETCH_ALLTASK_ERROR,
@@ -7,7 +13,11 @@ import {
   FETCH_USER_ERROR,
   FETCH_USER_INPROGRESS,
   FETCH_USER_SUCCESS,
-  ERROR
+  ERROR,
+  EDIT_TASK,
+  OPEN_TASK_DRAWER,
+  UPDATE_EDITED_TASK,
+  REMOVE_TASK
 } from "./action";
 
 export const fetchUsersAction = () => {
@@ -53,10 +63,61 @@ export const addNewTaskData = (payload) => {
     });
   };
 };
+export const updateTaskData = (payload, taskId) => {
+  return (dispatch) => {
+    return updateTask(payload, taskId).then((response) => {
+      if (response.status === "success") {
+        dispatch({
+          type: UPDATE_EDITED_TASK,
+          payload: response.data
+        });
+      } else {
+        dispatch({
+          type: ERROR,
+          payload: { status: true, message: "Error on updating task data" }
+        });
+      }
+    });
+  };
+};
+
+export const removeTask = (taskId) => {
+  return (dispatch) => {
+    return deleteTask(taskId).then((response) => {
+      if (response.status === "success") {
+        dispatch({
+          type: REMOVE_TASK,
+          payload: {
+            id: taskId
+          }
+        });
+      } else {
+        dispatch({
+          type: ERROR,
+          payload: { status: true, message: "Error on removing task" }
+        });
+      }
+    });
+  };
+};
 
 export const clearError = () => {
   return {
     type: ERROR,
     payload: { status: false, message: "" }
+  };
+};
+
+export const openTaskDrawerAction = (payload) => {
+  return {
+    type: OPEN_TASK_DRAWER,
+    payload
+  };
+};
+
+export const editTaskAction = (payload) => {
+  return {
+    type: EDIT_TASK,
+    payload
   };
 };

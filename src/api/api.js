@@ -32,7 +32,7 @@ export const updateTask = async (payload, taskId) => {
     }
   ).then((res) => res.json());
   if (response.status === "success") {
-    return { status: "success", data: response.data };
+    return { status: "success", data: response.results };
   } else {
     return { status: "error" };
   }

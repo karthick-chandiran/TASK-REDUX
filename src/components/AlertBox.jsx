@@ -15,7 +15,6 @@ export default function AlertBox() {
       }, 5000);
     }
   }, [show, dispatch]);
-  console.log(show, message);
   if (!show) {
     return null;
   }

@@ -2,7 +2,6 @@ import styled from "styled-components";
 
 const ImageContainer = styled.div`
   width: 20px;
-  margin: auto;
 `;
 export default function UserIcon() {
   return (
