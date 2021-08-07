@@ -14,22 +14,48 @@ import { Form, FormControl, InputGroup } from "react-bootstrap";
 import InputIcon from "../icons/InputIcon";
 import {
   getFormattedDate,
-  getTaskTimeInSeconds,
   getTimeZoneOffsetInSeconds,
-  secondsToTime,
   getTimeDropdownValues
 } from "../util";
 import TimeDropDown from "./TimeDropDown";
+import DateField from "./DateField";
+import SaveButton from "./SaveButton";
+import { CircularProgress } from "@material-ui/core";
 
 const useStyles = makeStyles({
-  saveButton: {
-    backgroundColor: "rgb(71, 187, 127)",
-    color: "white",
-    borderRadius: "3px"
-  },
   cancelButton: {
     background: "none",
     marginLeft: "auto"
+  },
+  dateField: {
+    width: "50%",
+    paddingRight: "10px"
+  },
+  timeField: {
+    width: "50%",
+    "& select": {
+      appearance: "none"
+    }
+  },
+  inputIcon: {
+    position: "absolute",
+    right: "10px",
+    top: "50%",
+    transform: "translateY(-52%)",
+    zIndex: 100
+  },
+  descField: {
+    "& .form-control": {
+      paddingRight: "30px"
+    }
+  },
+  progressBar: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    marginTop: -12,
+    marginLeft: -12,
+    zIndex: 1000
   }
 });
 
@@ -42,6 +68,7 @@ const InputField = styled.div`
 const FieldsContaienr = styled.div`
   background-color: rgb(237, 247, 252);
   padding: 10px 10px 15px;
+  position: relative;
 `;
 const ButtonsContainer = styled.div`
   display: flex;
@@ -50,15 +77,15 @@ const ButtonsContainer = styled.div`
 
 function TaskFields(props) {
   const [formData, updateFormData] = useState(props.defaultFormData);
-
-  const [isFormValid, updateIsFormValid] = useState(false);
+  const [disableSave, updateDisableSave] = useState(true);
+  const [formSubmitInProgress, setInProgress] = useState(false);
   const dispatch = useDispatch();
   const classes = useStyles();
   const onValueChange = (e) => {
     const { name, value } = e.target;
     const newFormData = { ...formData, [name]: value };
     updateFormData(newFormData);
-    updateIsFormValid(checkFormValid(newFormData));
+    updateDisableSave(!checkFormValid(newFormData));
   };
   const checkFormValid = (newFormData) => {
     return (
@@ -73,6 +100,7 @@ function TaskFields(props) {
   };
   const onSubmit = async (e) => {
     e.preventDefault();
+    setInProgress(true);
     const formattedDate = getFormattedDate(formData.taskDate);
     // const taskTime = getTaskTimeInSeconds(formData.taskTime);
     const taskTime = parseInt(formData.taskTime);
@@ -91,19 +119,22 @@ function TaskFields(props) {
     } else {
       dispatch(addNewTaskData(payload));
     }
-    closeDrawer();
+    setInProgress(true);
   };
   const onDeleteClick = () => {
     dispatch(removeTask(formData.taskId));
-    closeDrawer();
+    setInProgress(true);
   };
 
   return (
     <FieldsContaienr>
+      {formSubmitInProgress && (
+        <CircularProgress size={30} className={classes.progressBar} />
+      )}
       <form onSubmit={onSubmit} autoComplete="off">
         <InputField>
           <label htmlFor="desc">Task Description</label>
-          <InputGroup size="sm" className="mb-3">
+          <InputGroup className={classes.descField + " mb-3"} size="sm">
             <FormControl
               id="desc"
               type="text"
@@ -111,27 +142,17 @@ function TaskFields(props) {
               value={formData.description}
               onChange={onValueChange}
             />
-            <InputGroup.Append>
-              <InputGroup.Text>
-                <InputIcon />
-              </InputGroup.Text>
-            </InputGroup.Append>
+            <InputIcon className={classes.inputIcon} />
           </InputGroup>
         </InputField>
         <VerticalContainer>
-          <InputField>
-            <label htmlFor="date">Date</label>
-            <InputGroup size="sm" className="mb-3">
-              <FormControl
-                id="date"
-                type="date"
-                value={formData.taskDate}
-                name="taskDate"
-                onChange={onValueChange}
-              />
-            </InputGroup>
+          <InputField className={classes.dateField}>
+            <DateField
+              value={formData.taskDate}
+              onValueChange={onValueChange}
+            />
           </InputField>
-          <InputField>
+          <InputField className={classes.timeField}>
             <TimeDropDown
               value={formData.taskTime}
               onValueChange={onValueChange}
@@ -162,14 +183,7 @@ function TaskFields(props) {
           <Button className={classes.cancelButton} onClick={closeDrawer}>
             Cancel
           </Button>
-          <Button
-            disabled={!isFormValid}
-            type="submit"
-            variant="contained"
-            className={classes.saveButton}
-          >
-            Save
-          </Button>
+          <SaveButton disabled={disableSave} />
         </ButtonsContainer>
       </form>
     </FieldsContaienr>
@@ -195,7 +209,7 @@ export default function TaskFieldsContainer(props) {
     defaultFormData = {
       assignedUser: editData.assigned_user,
       description: editData.task_msg,
-      taskDate: editData.task_date,
+      taskDate: new Date(editData.task_date),
       taskTime: editData.task_time,
       taskId: editData.id
     };
@@ -204,7 +218,7 @@ export default function TaskFieldsContainer(props) {
     defaultFormData = {
       assignedUser: props.data[0].user_id,
       description: "",
-      taskDate: "",
+      taskDate: new Date(),
       taskTime: ""
     };
   }

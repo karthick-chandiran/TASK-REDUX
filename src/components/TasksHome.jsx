@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import TaskFields from "./TaskFields";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchAllTasksAction,
@@ -15,7 +15,7 @@ const AddButton = styled.div`
   border-left: 1px solid var(--border-color);
   font-size: 20px;
   font-weight: 500;
-  padding: 7px 13px;
+  padding: 4px 13px;
   &:hover {
     cursor: pointer;
   }
@@ -31,12 +31,16 @@ const Title = styled.div`
 `;
 const Count = styled.span`
   margin-left: 5px;
+  color: rgb(193, 173, 170);
 `;
 
 const TaskHomeContainer = styled.main`
   width: 400px;
   border: 1px solid var(--border-color);
   border-radius: 3px;
+  margin: auto;
+  position: relative;
+  top: 30%;
 `;
 
 export default function TasksHome() {

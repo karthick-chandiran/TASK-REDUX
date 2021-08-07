@@ -1,4 +1,4 @@
-import { companyID, userID, accessToken } from "./constants";
+import { companyID, accessToken } from "./constants";
 const headers = {
   Authorization: "Bearer " + accessToken,
   Accept: "application/json",

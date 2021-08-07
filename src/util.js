@@ -37,7 +37,7 @@ export const getTimeDropdownValues = () => {
 };
 
 export const getFormattedDate = (date) => {
-  const taskDate = new Date(date);
+  const taskDate = date;
   let month = taskDate.getMonth() + 1;
   month = month < 10 ? "0" + month : month;
   let day = taskDate.getDate();

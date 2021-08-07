@@ -54,6 +54,7 @@ export const addNewTaskData = (payload) => {
           type: ADD_NEW_TASK,
           payload: response.data
         });
+        dispatch(openTaskDrawerAction(false));
       } else {
         dispatch({
           type: ERROR,
@@ -71,6 +72,7 @@ export const updateTaskData = (payload, taskId) => {
           type: UPDATE_EDITED_TASK,
           payload: response.data
         });
+        dispatch(openTaskDrawerAction(false));
       } else {
         dispatch({
           type: ERROR,
@@ -91,6 +93,7 @@ export const removeTask = (taskId) => {
             id: taskId
           }
         });
+        dispatch(openTaskDrawerAction(false));
       } else {
         dispatch({
           type: ERROR,

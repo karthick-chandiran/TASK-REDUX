@@ -1,6 +1,5 @@
 import styled from "styled-components";
 const Wrapper = styled.div`
-  cursor: pointer;
   width: 15px;
   color: rgb(169, 169, 161);
 `;
